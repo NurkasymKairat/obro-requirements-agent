@@ -9,3 +9,4 @@ CLAUDE.md
 docs/requirements.md
 docs/*.pdf
 .env.prod
+!docs/presentation.pdf
