@@ -1,0 +1,10 @@
+.env*
+.cache
+reports
+docs/*.pdf
+node_modules
+**/node_modules
+.git
+web/dist
+.venv
+**/__pycache__

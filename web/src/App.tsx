@@ -29,6 +29,7 @@ export default function App() {
   const [run, setRun] = useState<RunView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(DEFAULT_TITLE); // WEB_TITLE на сервере
+  const [uploadAuth, setUploadAuth] = useState(false);
 
   useEffect(() => {
     fetchHealth().then(
@@ -36,6 +37,7 @@ export default function App() {
         const t = typeof h.title === "string" && h.title.trim() ? h.title.trim() : DEFAULT_TITLE;
         setTitle(t);
         document.title = t;
+        setUploadAuth(h.uploadAuth);
       },
       () => {
         document.title = DEFAULT_TITLE;
@@ -80,7 +82,7 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [route]);
 
-  if (route.name === "home") return <UploadScreen title={title} onStarted={(id) => go(`/runs/${id}`)} onDemo={() => go("/demo")} />;
+  if (route.name === "home") return <UploadScreen title={title} authRequired={uploadAuth} onStarted={(id) => go(`/runs/${id}`)} onDemo={() => go("/demo")} />;
 
   if (error)
     return (

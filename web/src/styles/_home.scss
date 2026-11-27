@@ -258,3 +258,38 @@
 .run-again {
   margin-top: $pad;
 }
+
+// доступ жюри: логин и пароль перед загрузкой
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: $gap;
+
+  .label {
+    margin-right: 4px;
+    white-space: nowrap;
+  }
+
+  input {
+    width: 160px;
+    height: $btn-h;
+    padding: 0 12px;
+    border: 1px solid $border;
+    border-radius: $radius;
+    background: $surface;
+    font: inherit;
+    font-size: $fs-small;
+    color: $text;
+
+    &:focus {
+      outline: none;
+      border-color: $accent;
+    }
+  }
+
+  .auth-note {
+    font-size: $fs-small;
+    color: $muted;
+  }
+}

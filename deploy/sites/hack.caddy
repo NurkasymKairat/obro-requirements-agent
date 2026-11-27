@@ -1,0 +1,33 @@
+# tzcontrol: hack.obroai.com -> контейнер tzcontrol:8000 в сети web.
+# Загрузка документа (POST /api/runs) — только для жюри; просмотр, пример и отчёты открыты.
+# Хеш пароля: переменная TZCONTROL_JURY_HASH в /opt/proxy/.env (caddy hash-password).
+hack.obroai.com {
+	encode zstd gzip
+
+	request_body {
+		max_size 10MB
+	}
+
+	# фронт по этому заголовку заранее показывает поля логина и пароля
+	header X-Upload-Auth basic
+
+	@upload {
+		method POST
+		path /api/runs
+	}
+	basic_auth @upload {
+		jury {$TZCONTROL_JURY_HASH}
+	}
+
+	reverse_proxy tzcontrol:8000 {
+		transport http {
+			read_timeout 600s
+		}
+	}
+
+	# без WWW-Authenticate браузер не показывает своё окно пароля: ошибку обрабатывает интерфейс
+	handle_errors 401 {
+		header -WWW-Authenticate
+		respond "Неверный логин или пароль" 401
+	}
+}

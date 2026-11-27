@@ -1,0 +1,27 @@
+# Проект tzcontrol. Запуск из /opt/tzcontrol/deploy: docker compose up -d --build
+# Порты наружу не публикуются: трафик приходит через общий Caddy по сети web.
+name: tzcontrol
+
+services:
+  tzcontrol:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: tzcontrol:latest
+    container_name: tzcontrol
+    env_file: .env.prod
+    environment:
+      CACHE_DIR: /data/cache
+    volumes:
+      - cache:/data/cache
+    networks:
+      - web
+    mem_limit: 512m
+    restart: unless-stopped
+
+volumes:
+  cache:
+
+networks:
+  web:
+    external: true

@@ -1,0 +1,31 @@
+# Общий прокси для всех проектов сервера. Живёт в /opt/proxy.
+# Проекты подключаются файлами sites/*.caddy и сетью web.
+name: proxy
+
+services:
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    env_file:
+      - path: .env          # хеши паролей проектов, например TZCONTROL_JURY_HASH
+        required: false
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./sites:/etc/caddy/sites:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  web:
+    external: true

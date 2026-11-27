@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { startRun } from "../api";
+import { AuthError, startRun, type Credentials } from "../api";
 import { HomeFrame } from "./HomeFrame";
 
 const EXT = [".pdf", ".md", ".markdown", ".txt", ".docx"];
@@ -7,15 +7,31 @@ const MAX = 10 * 1024 * 1024;
 
 interface Props {
   title: string;
+  authRequired: boolean;
   onStarted: (id: string) => void;
   onDemo: () => void;
 }
 
-export function UploadScreen({ title, onStarted, onDemo }: Props) {
+const CREDS_KEY = "tzcontrol.jury";
+
+function savedCreds(): Credentials {
+  try {
+    const c = JSON.parse(sessionStorage.getItem(CREDS_KEY) ?? "");
+    if (typeof c?.user === "string" && typeof c?.password === "string") return c;
+  } catch {
+    /* нет сохранённых */
+  }
+  return { user: "jury", password: "" };
+}
+
+export function UploadScreen({ title, authRequired, onStarted, onDemo }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [creds, setCreds] = useState<Credentials>(savedCreds);
+  const [askAuth, setAskAuth] = useState(false); // сервер ответил 401, хотя заранее пароль не требовал
+  const showAuth = authRequired || askAuth;
 
   const send = async (file: File | undefined) => {
     if (!file) return;
@@ -26,8 +42,11 @@ export function UploadScreen({ title, onStarted, onDemo }: Props) {
     if (!file.size) return setError("Файл пустой.");
     setBusy(true);
     try {
-      onStarted(await startRun(file));
+      const id = await startRun(file, showAuth ? creds : null);
+      if (showAuth) sessionStorage.setItem(CREDS_KEY, JSON.stringify(creds));
+      onStarted(id);
     } catch (e) {
+      if (e instanceof AuthError) setAskAuth(true);
       setError((e as Error).message);
       setBusy(false);
     }
@@ -35,6 +54,27 @@ export function UploadScreen({ title, onStarted, onDemo }: Props) {
 
   return (
     <HomeFrame title={title}>
+      {showAuth && (
+        <form className="auth" onSubmit={(e) => e.preventDefault()} autoComplete="on">
+          <span className="label">Доступ жюри</span>
+          <input
+            aria-label="Логин"
+            placeholder="Логин"
+            autoComplete="username"
+            value={creds.user}
+            onChange={(e) => setCreds({ ...creds, user: e.target.value })}
+          />
+          <input
+            aria-label="Пароль"
+            placeholder="Пароль"
+            type="password"
+            autoComplete="current-password"
+            value={creds.password}
+            onChange={(e) => setCreds({ ...creds, password: e.target.value })}
+          />
+          <span className="auth-note">нужен только для загрузки; пример открыт всем</span>
+        </form>
+      )}
       <div
         className={`dropzone${over ? " over" : ""}${busy ? " busy" : ""}`}
         onDragOver={(e) => {
