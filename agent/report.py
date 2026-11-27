@@ -207,8 +207,8 @@ def main_description(text: str) -> str:
 
 
 def headline(text: str, limit: int = HEADLINE_MAX) -> str:
-    """Заголовок дефекта: первое предложение основного описания целиком, без многоточия;
-    длиннее limit — обрезка по границе слова."""
+    """Заголовок дефекта: первое предложение основного описания целиком;
+    длиннее limit — обрезка по границе слова с многоточием «…» в конце."""
     t = " ".join(main_description(text).split())
     m = _SENTENCE_RE.match(t)
     first = (m.group(1) if m else t).rstrip()
@@ -216,7 +216,7 @@ def headline(text: str, limit: int = HEADLINE_MAX) -> str:
         return first
     cut = first[:limit + 1]
     cut = cut[:cut.rfind(" ")] if " " in cut else first[:limit]
-    return cut.rstrip(" ,;:—-")
+    return cut.rstrip(" ,;:—-") + "…"
 
 
 def dedupe_quotes(quotes: list) -> list:

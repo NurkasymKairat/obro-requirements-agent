@@ -38,7 +38,7 @@ def test_headline_first_sentence_without_merges():
     assert headline(text) == "Короткая суть."
     long = "Слово " * 40 + "конец."
     h = headline(long)
-    assert len(h) <= 120 and not h.endswith(("…", "...")) and h.endswith("Слово")
+    assert len(h) <= 121 and h.endswith("Слово…") and "..." not in h
     assert main_description(text) == "Короткая суть. Дальше подробности."
 
 
