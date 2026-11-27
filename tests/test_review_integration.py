@@ -62,8 +62,9 @@ def test_review_decisions_reach_report_json_and_md():
 
     md = render(res)
     main = md[:md.index("## Требует уточнения")]
-    assert "Объединено: F-002" in main
-    assert "Бонусы сгорают через 12 месяцев." in main and "«через 12 месяцев.»" in main
+    assert "Объединено с похожими замечаниями (1)" in main            # номер слитого не показывается
+    # вложенная цитата из того же места («через 12 месяцев.») показывается один раз — более полной
+    assert "«Бонусы сгорают через 12 месяцев.»" in main and "«через 12 месяцев.»" not in main
     pending = md[md.index("## Требует уточнения"):md.index("## 5. Сводка")]
     assert "F-004" in pending and "значение задано в критериях приёмки" in pending
     assert "F-004" not in md[md.index("## 3."):md.index("## Требует уточнения")]

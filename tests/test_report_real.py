@@ -24,7 +24,7 @@ def test_render_saved_real_report_json():
     for h in SECTIONS:
         assert h in md
     for s in r.stages:
-        assert f"| {s['name']} |" in md
+        assert f"({s['name']}) |" in md          # «нарезка требований (extract)» в приложении
     assert r.requirements[0].quote.text.split()[0] in md
 
 

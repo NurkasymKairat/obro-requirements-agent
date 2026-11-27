@@ -50,7 +50,10 @@ STAGE_DEFAULTS = {"status": "ok", "thinking": None, "seconds": 0.0, "calls": 0, 
 def _env() -> Environment:
     env = Environment(undefined=StrictUndefined, trim_blocks=True, lstrip_blocks=True, keep_trailing_newline=True)
     env.filters.update(cell=_cell, inline=_inline, sev=SEVERITY_RU.get, kind=KIND_RU.get, status=STATUS_RU.get,
-                       duration=_duration)
+                       duration=_duration,
+                       # функции оформления объявлены ниже; связываются при вызове
+                       stage_ru=lambda x: stage_ru(x), calls_in=lambda n: calls_in(n),
+                       headline=lambda t: headline(t), main_description=lambda t: main_description(t))
     return env
 
 
@@ -158,6 +161,98 @@ def humanize_result(result: RunResult) -> RunResult:
     return result.model_copy(update={"findings": findings, "first_fixes": [h(x) for x in result.first_fixes]})
 
 
+# ---------- оформление отчёта ----------
+
+STAGE_RU = {
+    "extract": "нарезка требований",
+    "rules": "правила без модели",
+    "individual": "проверка каждого требования",
+    "cross_acceptance": "требования и критерии приёмки",
+    "parts_goals": "цели и части документа",
+    "review": "итоговая сверка",
+    "cross_parts": "документ и спецификация API",
+    "acceptance_table": "таблица критериев приёмки",
+    "cross": "перекрёстная проверка",
+    "states_units": "состояния, единицы и границы",
+}
+_MERGED_RE = re.compile(r"Сюда же относится \(F-\d+\)")
+_MERGED_NOTE = "Сюда же относится (объединено с похожим замечанием)"
+_SENTENCE_RE = re.compile(r"^(.+?[.!?])(?=\s+[А-ЯЁA-Z«\"'(]|$)", re.S)
+HEADLINE_MAX = 120
+MAIN_QUOTES_MAX = 3
+
+
+def plural(n: int, one: str, few: str, many: str) -> str:
+    a = abs(n) % 100
+    if 10 < a < 20:
+        return many
+    return one if a % 10 == 1 else few if 2 <= a % 10 <= 4 else many
+
+
+def stage_ru(name: str) -> str:
+    """«нарезка требований (extract)»; неизвестный проход — внутреннее имя."""
+    ru = STAGE_RU.get(name)
+    return f"{ru} ({name})" if ru else name
+
+
+def calls_in(n: int) -> str:
+    """«в 1 вызове», «в 3 вызовах» (предложный падеж)."""
+    return f"в {n} {'вызове' if n % 10 == 1 and n % 100 != 11 else 'вызовах'}"
+
+
+def main_description(text: str) -> str:
+    """Описание основного замечания без вставок слитых («Сюда же относится …»)."""
+    i = text.find(" Сюда же относится (")
+    return (text[:i] if i >= 0 else text).strip()
+
+
+def headline(text: str, limit: int = HEADLINE_MAX) -> str:
+    """Заголовок дефекта: первое предложение основного описания целиком, без многоточия;
+    длиннее limit — обрезка по границе слова."""
+    t = " ".join(main_description(text).split())
+    m = _SENTENCE_RE.match(t)
+    first = (m.group(1) if m else t).rstrip()
+    if len(first) <= limit:
+        return first
+    cut = first[:limit + 1]
+    cut = cut[:cut.rfind(" ")] if " " in cut else first[:limit]
+    return cut.rstrip(" ,;:—-")
+
+
+def dedupe_quotes(quotes: list) -> list:
+    """Одинаковые и вложенные цитаты из одного блока — один раз, остаётся более полная."""
+    keep = []
+    for i, q in enumerate(quotes):
+        covered = any(
+            j != i and o.block_id == q.block_id and o.start <= q.start and q.end <= o.end
+            and ((o.end - o.start) > (q.end - q.start) or j < i)
+            for j, o in enumerate(quotes))
+        if not covered:
+            keep.append(q)
+    return keep
+
+
+def polish_for_report(result: RunResult) -> RunResult:
+    """Только для Markdown-отчёта: номера слитых замечаний -> слова, без повторов цитат."""
+    findings = [f.model_copy(update={"description": _MERGED_RE.sub(_MERGED_NOTE, f.description),
+                                     "quotes": dedupe_quotes(f.quotes)}) for f in result.findings]
+    return result.model_copy(update={"findings": findings})
+
+
+def summary_line(result: RunResult, confirmed: list) -> str:
+    """«Итог: начинать разработку и тестирование нельзя — 3 критичных дефекта» (текст из VERDICT_RU)."""
+    head = re.split(r"[:;]", VERDICT_RU[result.verdict])[0].strip().rstrip(".")
+    head = head[:1].lower() + head[1:]
+    tail = ""
+    if result.verdict == "not_ready":
+        n = sum(1 for f in confirmed if f.severity == "critical")
+        tail = f" — {n} {plural(n, 'критичный дефект', 'критичных дефекта', 'критичных дефектов')}"
+    elif result.verdict == "ready_with_fixes":
+        n = sum(1 for f in confirmed if f.severity == "high")
+        tail = f" — {n} {plural(n, 'дефект', 'дефекта', 'дефектов')} высокой важности"
+    return f"Итог: {head}{tail}"
+
+
 def review_notes(stages: list[dict]) -> tuple[dict, dict]:
     """Из журнала ревью: какие замечания слиты в какое и почему оспорены."""
     merged: dict[str, list] = {}
@@ -179,7 +274,7 @@ def normalize_stages(stages: list[dict]) -> list[dict]:
 
 
 def render(result: RunResult) -> str:
-    result = humanize_result(result.model_copy(update={"stages": normalize_stages(result.stages)}))
+    result = polish_for_report(humanize_result(result.model_copy(update={"stages": normalize_stages(result.stages)})))
     findings = sorted(result.findings, key=finding_sort_key)
     # Основные разделы и сводка — только подтверждённые; potential идут отдельным разделом «Требует уточнения».
     confirmed = [f for f in findings if f.status == "confirmed"]
@@ -220,6 +315,8 @@ def render(result: RunResult) -> str:
         clean_rids=[r.rid for r in result.requirements if not by_req.get(r.rid)],
         critical_list=[f for f in confirmed if f.kind in CRITICAL_KINDS],
         verdict_text=VERDICT_RU[result.verdict],
+        summary_line=summary_line(result, confirmed),
+        main_quotes_max=MAIN_QUOTES_MAX,
         SEVERITY_RU=SEVERITY_RU,
         KIND_RU=KIND_RU,
     )

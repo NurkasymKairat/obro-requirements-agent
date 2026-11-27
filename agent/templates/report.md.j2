@@ -1,14 +1,19 @@
-{% macro finding(f, show_reqs=true) %}
+{% macro finding(f, show_reqs=true, main=false) %}
 **{{ f.fid }}** · {{ f.severity|sev }} · {{ f.kind|kind }} · {{ f.status|status }}{% if show_reqs and f.requirement_ids %} · {{ f.requirement_ids|join(", ") }}{% endif %}
 
-- Суть: {{ f.description|inline }}
-{% for q in f.quotes %}
+- Суть: {{ (f.description|main_description if main else f.description)|inline }}
+{% set shown = f.quotes[:main_quotes_max] if main else f.quotes %}
+{% for q in shown %}
 - Цитата{% if f.quotes|length > 1 %} {{ loop.index }}{% endif %}: «{{ q.text|inline }}»
   Место: {{ q.location|inline }}
 {% endfor %}
+{% if shown|length < f.quotes|length %}
+{% set rest = f.quotes|length - shown|length %}
+- Ещё {{ rest }} {{ "цитата" if rest % 10 == 1 and rest % 100 != 11 else ("цитаты" if rest % 10 in [2, 3, 4] and rest % 100 not in [12, 13, 14] else "цитат") }} в разделе {{ 4 if f.scope == "set" else 3 }}.
+{% endif %}
 - Критерий: {{ f.criterion|inline }}; стандарт: {{ f.standard|inline }}
 {% if merged_map[f.fid] is defined %}
-- Объединено: {% for m in merged_map[f.fid] %}{{ m.fid }}{% if not loop.last %}, {% endif %}{% endfor %} — {{ merged_map[f.fid][0].reason|inline }}
+- Объединено с похожими замечаниями ({{ merged_map[f.fid]|length }}): {{ merged_map[f.fid][0].reason|inline }}
 {% endif %}
 {% if f.status != "confirmed" and dispute_reason[f.fid] is defined %}
 - Почему требует уточнения: {{ dispute_reason[f.fid]|inline }}
@@ -24,7 +29,7 @@
 | Документ | `{{ r.document }}` |
 | Дата прогона | {{ r.date }} |
 | Провайдер | {{ r.provider }} |
-| Модель | {% if per_stage_models %}по проходам, см. таблицу ниже ({{ r.model }}){% else %}`{{ r.model }}`{% endif %} |
+| Модель | {% if per_stage_models %}по проходам, см. «Приложение. Ход прогона» ({{ r.model }}){% else %}`{{ r.model }}`{% endif %} |
 | Версия агента | `{{ r.agent_version }}` |
 | Полнота прогона | {% if r.incomplete_reason %}**НЕПОЛНЫЙ** — {{ r.incomplete_reason|cell }}{% else %}полный, все проходы выполнены{% endif %} |
 | Вызовов модели | {{ totals.calls }} (повторов {{ totals.retries }}, ответов из кеша {{ totals.cache_hits }}) |
@@ -33,28 +38,7 @@
 | Сумма длительностей вызовов | {{ totals.calls_seconds|duration }} — вызовы идут параллельно, поэтому сумма может быть больше времени прогона |
 | Критерии | ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE 830-1998 п. 4.3 |
 
-| Проход | Статус | Модель | Рассуждение | Время | Вызовов | Повторов | Из кеша | Токены вход / выход / рассуждение | Результат | Отброшено (цитата не найдена) |
-| :--- | :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-{% for s in r.stages %}
-| {{ s.name }} | {{ {"ok": "выполнен", "skipped": "**пропущен**"}.get(s.status, "**сбой**: " ~ (s.error|cell)) }} | {{ (s.models|join(", ")) or "—" }} | {{ s.thinking or "—" }}{% if s.thinking_zero %} (не рассуждала в {{ s.thinking_zero }} вызовах){% endif %} | {{ s.seconds|duration }} | {{ s.calls }} | {{ s.retries }} | {{ s.cache_hits }} | {{ s.tokens_in }} / {{ s.tokens_out }} / {{ s.tokens_thinking }} | {{ s["items"] }} | {{ s.dropped|length }} |
-{% endfor %}
-{% if switches %}
-
-Переходы на запасную модель:
-{% for w in switches %}
-- {{ w.stage }}: {{ w["from"] }} → {{ w.to }} ({{ w.reason|inline }})
-{% endfor %}
-{% endif %}
-{% if dropped_total %}
-
-<details><summary>Отброшенные цитаты ({{ dropped_total }})</summary>
-
-{% for s in r.stages %}{% for d in s.dropped %}
-- {{ s.name }}: {{ d.reason }} — «{{ d.quote|inline }}»
-{% endfor %}{% endfor %}
-
-</details>
-{% endif %}
+**{{ summary_line }}**
 
 ## Главное
 
@@ -62,9 +46,9 @@
 До пяти подтверждённых дефектов уровня «критично» и «высокая»; полный список — в разделах 3 и 4.
 
 {% for f in top5 %}
-### {{ loop.index }}. {{ f.kind|kind|capitalize }}: {{ f.description|inline|truncate(140) }}
+### {{ loop.index }}. {{ f.kind|kind|capitalize }}: {{ f.description|headline }}
 
-{{ finding(f) }}
+{{ finding(f, true, true) }}
 {% endfor %}
 {% elif analysis_ran %}
 Подтверждённых дефектов высокой и критичной важности не найдено.
@@ -176,4 +160,29 @@
 {% for x in r.first_fixes %}
 {{ loop.index }}. {{ x|inline }}
 {% endfor %}
+{% endif %}
+
+## Приложение. Ход прогона
+
+| Проход | Статус | Модель | Рассуждение | Время | Вызовов | Повторов | Из кеша | Токены вход / выход / рассуждение | Результат | Отброшено (цитата не найдена) |
+| :--- | :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+{% for s in r.stages %}
+| {{ s.name|stage_ru }} | {{ {"ok": "выполнен", "skipped": "**пропущен**"}.get(s.status, "**сбой**: " ~ (s.error|cell)) }} | {{ (s.models|join(", ")) or "—" }} | {{ s.thinking or "—" }}{% if s.thinking_zero %} (не рассуждала {{ s.thinking_zero|calls_in }}){% endif %} | {{ s.seconds|duration }} | {{ s.calls }} | {{ s.retries }} | {{ s.cache_hits }} | {{ s.tokens_in }} / {{ s.tokens_out }} / {{ s.tokens_thinking }} | {{ s["items"] }} | {{ s.dropped|length }} |
+{% endfor %}
+{% if switches %}
+
+Переходы на запасную модель:
+{% for w in switches %}
+- {{ w.stage }}: {{ w["from"] }} → {{ w.to }} ({{ w.reason|inline }})
+{% endfor %}
+{% endif %}
+{% if dropped_total %}
+
+<details><summary>Отброшенные цитаты ({{ dropped_total }})</summary>
+
+{% for s in r.stages %}{% for d in s.dropped %}
+- {{ s.name|stage_ru }}: {{ d.reason }} — «{{ d.quote|inline }}»
+{% endfor %}{% endfor %}
+
+</details>
 {% endif %}
