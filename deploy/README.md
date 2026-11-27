@@ -60,7 +60,7 @@ git clone <адрес репозитория> /opt/tzcontrol
 cd /opt/tzcontrol/deploy
 cp .env.prod.example .env.prod
 nano .env.prod                     # ключ модели: OPENAI_API_KEY или GEMINI_API_KEY, LLM_PROVIDER
-docker compose up -d --build
+APP_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build
 ```
 
 Проверка:
@@ -81,7 +81,7 @@ curl -s https://hack.obroai.com/api/health
 ## 3. Обновление
 
 ```
-cd /opt/tzcontrol && git pull && cd deploy && docker compose up -d --build
+cd /opt/tzcontrol && git pull && cd deploy && APP_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build
 ```
 
 Если изменился `deploy/sites/hack.caddy`:
@@ -147,5 +147,6 @@ cd /opt/proxy && docker compose up -d --force-recreate
 | `deploy/proxy/` | общий Caddy: порты 80/443, тома данных и конфига, `import sites/*.caddy` |
 | `deploy/sites/hack.caddy` | домен, прокси на `tzcontrol:8000` (read_timeout 600 с), тело до 10 МБ, пароль на загрузку |
 
-Версия в паспорте прогона в контейнере — `0.1.0` без хеша коммита: папка `.git` в образ не попадает
-(`.dockerignore`), а версию ядро берёт из `git describe`.
+Версия в паспорте прогона: в образе нет `.git` (`.dockerignore`), поэтому коммит передаётся при сборке —
+`APP_COMMIT=$(git rev-parse --short HEAD)` перед `docker compose up -d --build` (build arg → ENV `APP_COMMIT`).
+Версия получается `0.1.0+<коммит>`; без `APP_COMMIT` — просто `0.1.0`.

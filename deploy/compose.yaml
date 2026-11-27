@@ -7,6 +7,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
+      args:
+        APP_COMMIT: ${APP_COMMIT:-}     # APP_COMMIT=$(git rev-parse --short HEAD) docker compose up -d --build
     image: tzcontrol:latest
     container_name: tzcontrol
     env_file: .env.prod

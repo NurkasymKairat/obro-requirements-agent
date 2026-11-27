@@ -11,7 +11,10 @@ RUN npm run build
 
 # ---- 2. Приложение ----
 FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 \
+# коммит для версии агента в паспорте прогона: в образе нет git (.git исключён .dockerignore)
+ARG APP_COMMIT=""
+ENV APP_COMMIT=${APP_COMMIT} \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \

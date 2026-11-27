@@ -98,6 +98,8 @@ def agent_version() -> str:
                              capture_output=True, text=True, timeout=5).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         rev = ""
+    # в контейнере нет git: коммит передаётся при сборке образа (ARG/ENV APP_COMMIT)
+    rev = rev or os.getenv("APP_COMMIT", "").strip()
     return f"{__version__}+{rev}" if rev else __version__
 
 
