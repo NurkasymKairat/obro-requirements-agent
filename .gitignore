@@ -6,7 +6,6 @@ reports/
 .claude
 CLAUDE.md
 .claude/
-docs/requirements.md
 docs/*.pdf
 .env.prod
 !docs/presentation.pdf

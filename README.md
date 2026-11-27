@@ -32,9 +32,8 @@ python -m agent docs/requirements.md reports/report.md
 ```
 
 Первый аргумент — путь к проверяемому документу, второй — путь к отчёту (по умолчанию
-`reports/report.md`). Документ организаторов в этот репозиторий не включён: он берётся из репозитория
-задания https://github.com/BCC-HUB/ai-requirements-validator-task — положите его в `docs/requirements.md`
-или укажите свой путь.
+`reports/report.md`). Документ организаторов лежит в `docs/requirements.md` — это копия из репозитория
+задания https://github.com/BCC-HUB/ai-requirements-validator-task. Для другого документа укажите свой путь.
 Проверить запуск без него можно на примере из репозитория:
 `python -m agent eval/sample_other.md reports/sample.md`.
 
