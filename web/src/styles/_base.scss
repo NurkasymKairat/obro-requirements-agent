@@ -1,0 +1,233 @@
+@use "sass:map";
+@use "tokens" as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: $bg;
+  color: $ink;
+  font: #{$fs-body}/#{$lh-body} $font;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+// Кнопка (Figma: Вид=Основная / Вид=Вторичная)
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: $btn-h;
+  padding: 0 16px;
+  border: 1px solid $line;
+  border-radius: $radius;
+  font-size: $fs-small;
+  line-height: $lh-small;
+  background: $surface;
+  color: $ink;
+  font-weight: $fw-medium;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    border-color: $line-hover;
+    background: $surface-2;
+  }
+
+  &.primary {
+    background: $accent;
+    border-color: $accent;
+    color: $on-accent;
+
+    &:hover {
+      background: $accent-hover;
+    }
+  }
+}
+
+.link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: $accent;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Бейдж критичности и типа дефекта (Figma: Бейдж критичности, Бейдж типа дефекта)
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: $badge-h;
+  padding: 0 8px;
+  border-radius: $radius-badge;
+  font-size: $fs-label;
+  font-weight: $fw-medium;
+  line-height: $lh-label;
+  letter-spacing: $ls-label;
+  white-space: nowrap;
+  background: $low-bg;
+  color: $low;
+
+  &.kind {
+    font-weight: $fw-medium;
+  }
+
+  &.potential {
+    background: $potential-bg;
+    color: $potential-ink;
+  }
+
+  &.demo {
+    background: $accent-soft;
+    color: $accent;
+    margin-right: 8px;
+  }
+}
+
+@each $name, $c in $sev {
+  .badge.sev.sev-#{$name} {
+    background: map.get($sev-bg, $name);
+    color: $c;
+  }
+}
+
+// Подпись раздела (Figma: Текст/label)
+.label {
+  font-size: $fs-label;
+  line-height: $lh-label;
+  font-weight: $fw-medium;
+  letter-spacing: $ls-label;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+// Знак продукта
+.logo {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: $logo-s;
+  height: $logo-s;
+  border-radius: 7px;
+  background: $accent;
+  color: $on-accent;
+  font-size: $fs-l;
+  font-weight: $fw-bold;
+}
+
+.fid {
+  font-family: $mono;
+  font-size: $fs-small;
+  line-height: $lh-small;
+  font-weight: $fw-normal;
+  color: $muted;
+}
+
+.error {
+  color: $critical;
+}
+
+.warn {
+  padding: 6px 12px;
+  margin: 8px $page-pad 0;
+  border-radius: $radius-s;
+  background: $warn-bg;
+  color: $warn-ink;
+}
+
+.center-msg {
+  display: grid;
+  place-items: center;
+  gap: $gap;
+  min-height: 60vh;
+  color: $ink-2;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba($accent, 0.25);
+  border-top-color: $accent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// раскрывающийся список поверх содержимого (полоса итога)
+.popover {
+  position: relative;
+
+  summary {
+    cursor: pointer;
+    color: $accent;
+    font-weight: $fw-medium;
+    font-size: $fs-m;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      content: " ▾";
+    }
+  }
+
+  &[open] summary::after {
+    content: " ▴";
+  }
+
+  .popover-body {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 6px);
+    left: 0;
+    width: min(560px, 80vw);
+    max-height: 60vh;
+    overflow: auto;
+    padding: $gap $pad;
+    border: 1px solid $line;
+    border-radius: $radius;
+    background: $surface;
+    box-shadow: $shadow-card;
+    font-size: $fs-m;
+    color: $ink-2;
+
+    ol,
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+  }
+}

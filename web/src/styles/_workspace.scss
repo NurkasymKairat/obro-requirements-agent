@@ -1,0 +1,142 @@
+@use "tokens" as *;
+
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, $doc-col) minmax(0, $findings-col);
+  gap: $pad;
+  padding: $pad $page-pad $page-pad;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid $border;
+  border-radius: $radius;
+  background: $surface;
+  overflow: clip; // прокручивается только .pane-body, фильтры остаются на месте
+}
+
+// колонка замечаний — на фоне страницы, без рамки (Figma: «Замечания · независимая прокрутка»)
+.pane.pane-findings {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+
+  .pane-head {
+    padding: 0 0 8px;
+    border-bottom: 0;
+    min-height: 0;
+  }
+}
+
+.pane-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $gap;
+  padding: 10px 20px;
+  border-bottom: 1px solid $border;
+  min-height: 37px;
+
+  h2 {
+    font-size: $fs-label;
+    line-height: $lh-label;
+    font-weight: $fw-medium;
+    letter-spacing: $ls-label;
+    text-transform: uppercase;
+    color: $muted;
+    white-space: nowrap;
+
+    .count {
+      margin-left: 6px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+  }
+
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: $fs-small;
+  }
+
+  .hint,
+  .only {
+    color: $muted;
+    font-size: $fs-small;
+  }
+}
+
+.pane-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+// фильтры (Figma: «Фильтры замечаний», Чип фильтра)
+.filters {
+  flex: 0 0 auto;
+  padding: 0 0 $gap;
+  display: grid;
+  gap: 8px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  .reset {
+    margin-left: auto;
+    font-size: $fs-small;
+  }
+}
+
+.filter-label {
+  width: 109px;
+  font-size: $fs-label;
+  line-height: $lh-label;
+  font-weight: $fw-medium;
+  letter-spacing: $ls-label;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.chip {
+  height: $chip-h;
+  padding: 0 10px;
+  border: 1px solid $border;
+  border-radius: $radius-s;
+  background: $surface;
+  color: $muted;
+  font-size: $fs-small;
+  line-height: $lh-small;
+  font-weight: $fw-medium;
+  cursor: pointer;
+
+  .n {
+    margin-left: 2px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: $accent;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  &.on {
+    background: $accent;
+    border-color: $accent;
+    color: $on-accent;
+  }
+}

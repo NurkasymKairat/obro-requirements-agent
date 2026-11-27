@@ -1,0 +1,260 @@
+@use "tokens" as *;
+
+// Первый экран и экран прогресса (Figma: «01 · Загрузка», «01 · Проверка документа»)
+.home {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: min(#{$home-top}, 14vh) 24px 48px;
+}
+
+.home-inner {
+  width: min($home-width, 100%);
+}
+
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  h1 {
+    font-size: $fs-title;
+    line-height: $lh-title;
+    font-weight: $fw-semibold;
+  }
+}
+
+.logo.logo-l {
+  width: $logo-l;
+  height: $logo-l;
+  font-size: $fs-subtitle;
+}
+
+.home-tagline {
+  margin-top: 18px;
+}
+
+.lead {
+  margin: 18px 0 26px;
+  max-width: 640px;
+  font-size: $fs-body;
+  line-height: $lh-body;
+  color: $muted;
+}
+
+// зона перетаскивания
+.dropzone {
+  padding: 27px 24px 23px;
+  border: 1px dashed $dropzone-line;
+  border-radius: $radius;
+  background: $surface;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    border-color: $accent;
+    outline: none;
+  }
+
+  &.over {
+    border-color: $accent;
+    background: $accent-soft;
+  }
+
+  &.busy {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .dz-icon {
+    display: grid;
+    place-items: center;
+    width: $icon-box;
+    height: $icon-box;
+    margin: 0 auto;
+    border-radius: $radius;
+    background: $page;
+    color: $accent;
+    font-size: 24px;
+  }
+
+  .dz-title {
+    margin-top: 16px;
+    font-size: $fs-subtitle;
+    line-height: $lh-subtitle;
+    font-weight: $fw-semibold;
+  }
+
+  .dz-sub {
+    margin-top: 9px;
+    font-size: $fs-small;
+    line-height: $lh-small;
+    color: $muted;
+  }
+}
+
+.dz-actions {
+  display: flex;
+  justify-content: center;
+  gap: $pad;
+  margin-top: 22px;
+
+  .btn {
+    min-width: 160px;
+  }
+}
+
+.facts {
+  list-style: none;
+  margin: 36px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 45px;
+
+  li {
+    display: flex;
+    gap: 10px;
+    font-size: $fs-small;
+    line-height: $lh-small;
+    color: $muted;
+  }
+
+  .fact-icon {
+    flex: 0 0 18px;
+    color: $accent;
+    text-align: center;
+  }
+}
+
+.standards {
+  margin: 58px 0 0;
+  font-size: $fs-small;
+  line-height: $lh-small;
+  color: $muted;
+}
+
+// карточка прогона
+.run-card {
+  border: 1px solid $border;
+  border-radius: $radius;
+  background: $surface;
+}
+
+.run-head {
+  display: flex;
+  align-items: flex-start;
+  gap: $gap;
+  padding: 15px 19px;
+  border-bottom: 1px solid $border;
+
+  .run-file-icon {
+    width: 20px;
+    color: $accent;
+    line-height: $lh-small;
+  }
+
+  .run-file {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .run-name {
+    font-family: $mono;
+    font-size: $fs-small;
+    line-height: $lh-small;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .run-sub {
+    margin-top: 4px;
+    font-size: $fs-small;
+    line-height: $lh-small;
+    color: $muted;
+  }
+
+  .run-count {
+    margin-top: 6px;
+    color: $accent;
+    white-space: nowrap;
+  }
+}
+
+.stages {
+  list-style: none;
+  margin: 0;
+  padding: 9px 11px 11px;
+  display: grid;
+  gap: 2px;
+
+  .st {
+    display: grid;
+    grid-template-columns: 22px 1fr 126px 92px;
+    align-items: center;
+    column-gap: 16px;
+    min-height: $progress-row-h;
+    padding: 0 16px;
+    border-radius: $radius;
+  }
+
+  .st-icon {
+    color: $accent;
+    font-size: $fs-body;
+    text-align: center;
+  }
+
+  .st-name {
+    font-size: $fs-body;
+    line-height: $lh-body;
+  }
+
+  .st-status {
+    font-size: $fs-small;
+    color: $muted;
+  }
+
+  .st-time {
+    font-family: $mono;
+    font-size: $fs-small;
+    color: $muted;
+  }
+
+  .st-err {
+    grid-column: 2 / -1;
+    padding-bottom: 8px;
+    color: $critical;
+    font-size: $fs-label;
+    word-break: break-word;
+  }
+
+  .st-running {
+    background: $low-bg;
+
+    .st-status {
+      color: $accent;
+    }
+  }
+
+  .st-failed {
+    .st-icon,
+    .st-status {
+      color: $critical;
+    }
+  }
+
+  .st-skipped .st-name {
+    color: $muted;
+  }
+}
+
+.home .incomplete {
+  margin-bottom: $pad;
+}
+
+.run-again {
+  margin-top: $pad;
+}

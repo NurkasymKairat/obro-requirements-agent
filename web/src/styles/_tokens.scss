@@ -1,0 +1,139 @@
+// Все значения оформления — здесь. Источник: дизайн-система Figma «ТЗ Контроль»
+// (переменные «Цвет/…» и стили «Текст/…»). Остальные файлы стилей ссылаются только на эти переменные.
+
+// ---------- цвета (Figma: Цвет/…) ----------
+$page: #f5f6fa;               // Цвет/page
+$surface: #ffffff;            // Цвет/surface
+$text: #14171f;               // Цвет/text
+$muted: #667085;              // Цвет/muted
+$border: #e3e6ee;             // Цвет/border
+$accent: #1f3a8a;             // Цвет/accent
+
+$critical: #b42318;           // Цвет/critical
+$critical-bg: #fdecea;        // Цвет/criticalBg
+$high: #c2540a;               // Цвет/high
+$high-bg: #fff1e3;            // Цвет/highBg
+$medium: #a67c00;             // Цвет/medium
+$medium-bg: #fff8db;          // Цвет/mediumBg
+$low: #475467;                // Цвет/low
+$low-bg: #eef1f5;             // Цвет/lowBg
+
+$side1: #fff3bf;              // Цвет/side1 — сторона 1 противоречия
+$side2: #dcebff;              // Цвет/side2 — сторона 2
+
+// производные: имена, на которые ссылаются остальные файлы
+$bg: $page;
+$ink: $text;
+$ink-2: $low;
+$ink-3: $muted;
+$line: $border;
+$line-2: $low-bg;
+$line-hover: #c9ceda;
+$surface-2: $page;
+$surface-code: $page;
+$surface-inline-code: $low-bg;
+$dropzone-line: $border;
+$accent-hover: #182f73;
+$accent-soft: #e8ecf7;
+$on-accent: $surface;
+
+$ok: $accent;                 // «готово» в макете — цвет акцента
+$fix-bg: transparent;         // «Как исправить» — без подложки, подпись цветом акцента
+$fix-ink: $accent;
+$potential-bg: $low-bg;
+$potential-ink: $low;
+$warn-bg: $medium-bg;
+$warn-ink: $medium;
+$danger-bg: $critical-bg;
+$danger-line: #f4c7c1;
+
+$sev: (
+  critical: $critical,
+  high: $high,
+  medium: $medium,
+  low: $low,
+);
+
+$sev-bg: (
+  critical: $critical-bg,
+  high: $high-bg,
+  medium: $medium-bg,
+  low: $low-bg,
+);
+
+// подсветка цитат в тексте
+$hl-a: $side1;
+$hl-a-line: #e2c44a;
+$hl-b: $side2;
+$hl-b-line: #7fb0ec;
+$hl-c: $low-bg;               // «ещё по теме» — нейтральный
+$hl-c-line: #b4bccb;
+$hl-c-card: $low-bg;
+$hl-hover: rgba(20, 23, 31, 0.05);
+$focus-ring: rgba(31, 58, 138, 0.45);
+
+$shadow-card: 0 4px 14px rgba(20, 23, 31, 0.06);
+$shadow-selected: none;
+$topbar-bg: $surface;
+
+// ---------- шрифты (Figma: Текст/…; локально через @fontsource) ----------
+$font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+$mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+$fs-title: 28px;
+$lh-title: 36px;       // Текст/title, Semi Bold
+$fs-subtitle: 18px;
+$lh-subtitle: 26px;    // Текст/subtitle, Semi Bold
+$fs-body: 15px;
+$lh-body: 24px;        // Текст/body
+$fs-small: 13px;
+$lh-small: 20px;       // Текст/small, Текст/button (Medium), Текст/mono
+$fs-label: 12px;
+$lh-label: 16px;       // Текст/label, Medium, прописные
+$ls-label: 0.6px;
+
+$fs-xs: 11px;
+$fs-s: $fs-label;
+$fs-m: $fs-small;
+$fs-base: $fs-body;
+$fs-l: $fs-body;
+$fs-xl: $fs-subtitle;
+$fs-num: $fs-title;
+$fs-h1: $fs-title;
+$fs-doc-h1: 22px;
+$fs-code: $fs-small;
+$fw-normal: 400;
+$fw-medium: 500;
+$fw-semibold: 600;
+$fw-bold: 600;
+$lh: 1.5;
+$lh-doc: 1.6;
+
+// ---------- форма (Figma: лист «Компоненты») ----------
+$radius: 10px;         // карточки, кнопки, панели, строки прогресса
+$radius-s: 6px;        // чипы фильтра, цитаты-стороны
+$radius-badge: 5px;    // бейджи критичности и типа
+$radius-mark: 4px;     // подсветка в тексте
+$radius-pill: $radius-s;
+$btn-h: 40px;
+$btn-h-l: 40px;
+$chip-h: 28px;
+$badge-h: 24px;
+$gap: 12px;
+$pad: 16px;
+
+// ---------- экран результата (ориентир 1440×900, от 1280) ----------
+$topbar-h: 56px;
+$strip-h: 112px;
+$top-card-h: 100px;
+$doc-col: 58fr;
+$findings-col: 42fr;
+$page-pad: 24px;
+
+// ---------- первый экран и прогресс (Figma: «01 · Загрузка», «01 · Проверка документа») ----------
+$home-width: 760px;
+$home-top: 150px;
+$logo-l: 40px;
+$logo-s: 28px;
+$icon-box: 60px;
+$progress-row-h: 44px;

@@ -1,0 +1,331 @@
+@use "tokens" as *;
+
+// экран результата — колонка на высоту окна: шапка, полоса итога, «Главное», рабочая область
+.result {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.topbar {
+  flex: 0 0 $topbar-h;
+  display: flex;
+  align-items: center;
+  gap: $pad;
+  padding: 0 $page-pad;
+  background: $topbar-bg;
+  border-bottom: 1px solid $line;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: $fw-bold;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .doc-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $ink-2;
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+}
+
+// ---------- полоса итога ----------
+.strip {
+  flex: 0 0 $strip-h;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(0, auto);
+  align-items: center;
+  gap: $pad;
+  margin: $pad $page-pad 0;
+  padding: $gap $pad;
+  border: 1px solid $line;
+  border-radius: $radius;
+  background: $surface;
+  min-height: 0;
+}
+
+.strip-verdict {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.verdict,
+.incomplete.compact {
+  padding-left: 4px;
+}
+
+.verdict {
+  .verdict-text {
+    font-size: $fs-subtitle;
+    font-weight: $fw-semibold;
+    line-height: $lh-subtitle;
+  }
+
+  .popover {
+    margin-top: 4px;
+  }
+}
+
+@each $v, $c in (not_ready: $critical, ready_with_fixes: $high, ready: $ok) {
+  .verdict.verdict-#{$v} {
+    .verdict-text {
+      color: $c;
+    }
+  }
+}
+
+.incomplete {
+  .incomplete-title {
+    font-size: $fs-xl;
+    font-weight: $fw-bold;
+    color: $critical;
+  }
+
+  ul {
+    margin: 8px 0 0;
+    padding-left: 18px;
+  }
+
+  .err {
+    color: $ink-2;
+    word-break: break-word;
+  }
+
+  .reason span {
+    font-weight: $fw-semibold;
+    color: $ink;
+  }
+
+  &:not(.compact) {
+    padding: 14px $pad;
+    border-radius: $radius;
+    background: $danger-bg;
+    border: 1px solid $danger-line;
+    border-left: 5px solid $critical;
+  }
+
+  &.compact {
+    .incomplete-title {
+      font-size: $fs-subtitle;
+      line-height: $lh-subtitle;
+      font-weight: $fw-semibold;
+    }
+
+    .one-line {
+      margin: 2px 0;
+      font-size: $fs-m;
+      color: $ink-2;
+    }
+  }
+}
+
+.strip-counters {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+
+.counts {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 20px;
+  height: 100%;
+  border-left: 1px solid $border;
+}
+
+.counts-main {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .num {
+    font-size: $fs-title;
+    line-height: $lh-title;
+    font-weight: $fw-semibold;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cap {
+    font-size: $fs-small;
+    line-height: 1.25;
+    color: $muted;
+
+    small {
+      display: block;
+      font-size: $fs-label;
+    }
+  }
+}
+
+.sev-line {
+  display: flex;
+  gap: 16px;
+  font-size: $fs-small;
+  line-height: $lh-small;
+  white-space: nowrap;
+}
+
+@each $name, $c in $sev {
+  .sev-count.sev-#{$name} {
+    color: $c;
+  }
+}
+
+.strip-counters .key {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 4px;
+  height: 100%;
+  padding: 0 20px;
+  border: 0;
+  border-left: 1px solid $border;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  .key-line {
+    font-size: $fs-small;
+    line-height: $lh-small;
+    color: $low;
+    white-space: nowrap;
+
+    b {
+      font-weight: $fw-semibold;
+      color: $text;
+    }
+  }
+
+  &:hover .key-line {
+    color: $accent;
+  }
+}
+
+.strip-passport {
+  justify-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  height: 100%;
+  padding-left: 20px;
+  border-left: 1px solid $border;
+  min-width: 0;
+  font-size: $fs-small;
+  line-height: $lh-small;
+  color: $muted;
+
+  div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mono {
+    font-family: $mono;
+  }
+}
+
+// ---------- «Главное» ----------
+.top {
+  flex: 0 0 $top-card-h;
+  display: flex;
+  gap: $gap;
+  margin: $pad $page-pad 0;
+  min-height: 0;
+
+  .top-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: $fs-label;
+    font-weight: $fw-medium;
+    text-transform: uppercase;
+    letter-spacing: $ls-label;
+    color: $muted;
+    text-align: center;
+  }
+
+  ol {
+    flex: 1;
+    min-width: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    height: $top-card-h;
+    padding: 8px 10px;
+    border: 1px solid $line;
+    border-radius: $radius;
+    background: $surface;
+    cursor: pointer;
+    transition: box-shadow 0.15s, border-color 0.15s;
+
+    &:hover {
+      box-shadow: $shadow-card;
+    }
+
+    &.selected {
+      border-color: $accent;
+      box-shadow: $shadow-selected;
+    }
+  }
+
+
+  .top-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .top-gist {
+    flex: 1;
+    font-size: $fs-small;
+    line-height: $lh-small;
+    color: $text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .loc {
+    color: $ink-3;
+    font-size: $fs-xs;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

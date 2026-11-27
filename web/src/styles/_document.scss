@@ -1,0 +1,165 @@
+@use "tokens" as *;
+
+.doc {
+  padding: 16px 28px 40vh; // запас снизу: последнюю цитату можно прокрутить к центру
+  font-size: $fs-base;
+  line-height: $lh-doc;
+  color: $ink;
+
+  .doc-h {
+    margin: 1.2em 0 0.4em;
+    line-height: 1.3;
+    scroll-margin-top: 20px;
+  }
+
+  h1.doc-h {
+    font-size: $fs-doc-h1;
+    margin-top: 0.2em;
+  }
+
+  h2.doc-h {
+    font-size: $fs-xl;
+    padding-bottom: 4px;
+    border-bottom: 1px solid $line;
+  }
+
+  h3.doc-h {
+    font-size: $fs-l;
+  }
+
+  h4.doc-h,
+  h5.doc-h,
+  h6.doc-h {
+    font-size: $fs-base;
+  }
+
+  .doc-p {
+    margin: 0.45em 0;
+  }
+
+  .doc-li {
+    position: relative;
+    margin: 0.25em 0;
+    padding-left: 18px;
+
+    &::before {
+      content: "•";
+      position: absolute;
+      left: 4px;
+      color: $ink-3;
+    }
+  }
+
+  .doc-code {
+    margin: 0.6em 0;
+    padding: 10px 12px;
+    border-radius: $radius-s;
+    background: $surface-code;
+    border: 1px solid $line-2;
+    font: #{$fs-code}/1.55 $mono;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  code {
+    font: $fs-code $mono;
+    background: $surface-inline-code;
+    padding: 0 3px;
+    border-radius: $radius-mark;
+  }
+
+  .doc-table-wrap {
+    margin: 0.6em 0 0.9em;
+    overflow-x: auto;
+  }
+
+  .doc-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: $fs-m;
+
+    th,
+    td {
+      border: 1px solid $line;
+      padding: 6px 9px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: $page;
+      font-size: $fs-label;
+      line-height: $lh-label;
+      font-weight: $fw-medium;
+      letter-spacing: $ls-label;
+      text-transform: uppercase;
+      color: $muted;
+    }
+  }
+}
+
+// подсветка цитат
+mark.hl,
+.legend .hl {
+  color: inherit;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+mark.hl-faint {
+  background: transparent;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+
+  &:hover {
+    background: $hl-hover;
+  }
+}
+
+@each $name, $c in $sev {
+  mark.hl-faint.sev-#{$name} {
+    text-decoration-color: rgba($c, 0.55);
+  }
+}
+
+.hl-a {
+  background: $hl-a;
+  border-radius: $radius-mark;
+}
+
+.hl-b {
+  background: $hl-b;
+  border-radius: $radius-mark;
+}
+
+.hl-c {
+  background: $hl-c;
+  border-radius: $radius-mark;
+}
+
+.hl-ab {
+  background: linear-gradient(180deg, $hl-a 50%, $hl-b 50%);
+}
+
+.legend .hl {
+  padding: 0 6px;
+  cursor: default;
+}
+
+mark[data-anchor] {
+  scroll-margin: 80px;
+  animation: flash 0.9s ease 1;
+}
+
+@keyframes flash {
+  0% {
+    outline: 3px solid $focus-ring;
+    outline-offset: 2px;
+  }
+  100% {
+    outline: 3px solid transparent;
+    outline-offset: 2px;
+  }
+}

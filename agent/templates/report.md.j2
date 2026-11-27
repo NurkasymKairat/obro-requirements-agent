@@ -1,0 +1,179 @@
+{% macro finding(f, show_reqs=true) %}
+**{{ f.fid }}** · {{ f.severity|sev }} · {{ f.kind|kind }} · {{ f.status|status }}{% if show_reqs and f.requirement_ids %} · {{ f.requirement_ids|join(", ") }}{% endif %}
+
+- Суть: {{ f.description|inline }}
+{% for q in f.quotes %}
+- Цитата{% if f.quotes|length > 1 %} {{ loop.index }}{% endif %}: «{{ q.text|inline }}»
+  Место: {{ q.location|inline }}
+{% endfor %}
+- Критерий: {{ f.criterion|inline }}; стандарт: {{ f.standard|inline }}
+{% if merged_map[f.fid] is defined %}
+- Объединено: {% for m in merged_map[f.fid] %}{{ m.fid }}{% if not loop.last %}, {% endif %}{% endfor %} — {{ merged_map[f.fid][0].reason|inline }}
+{% endif %}
+{% if f.status != "confirmed" and dispute_reason[f.fid] is defined %}
+- Почему требует уточнения: {{ dispute_reason[f.fid]|inline }}
+{% endif %}
+- Как исправить: {{ f.fix|inline }}
+{% endmacro %}
+# Отчёт о проверке требований
+
+## 1. Паспорт прогона
+
+| Параметр | Значение |
+| :--- | :--- |
+| Документ | `{{ r.document }}` |
+| Дата прогона | {{ r.date }} |
+| Провайдер | {{ r.provider }} |
+| Модель | {% if per_stage_models %}по проходам, см. таблицу ниже ({{ r.model }}){% else %}`{{ r.model }}`{% endif %} |
+| Версия агента | `{{ r.agent_version }}` |
+| Полнота прогона | {% if r.incomplete_reason %}**НЕПОЛНЫЙ** — {{ r.incomplete_reason|cell }}{% else %}полный, все проходы выполнены{% endif %} |
+| Вызовов модели | {{ totals.calls }} (повторов {{ totals.retries }}, ответов из кеша {{ totals.cache_hits }}) |
+| Токены | вход {{ totals.tokens_in }}, выход {{ totals.tokens_out }}, рассуждение {{ totals.tokens_thinking }}, всего {{ totals.tokens_total }} |
+| Время прогона | {% if r.wall_seconds is not none %}{{ r.wall_seconds|duration }} — по часам, от старта до записи отчёта{% else %}—{% endif %} |
+| Сумма длительностей вызовов | {{ totals.calls_seconds|duration }} — вызовы идут параллельно, поэтому сумма может быть больше времени прогона |
+| Критерии | ISO/IEC/IEEE 29148:2018 п. 5.2.5, 5.2.6; IEEE 830-1998 п. 4.3 |
+
+| Проход | Статус | Модель | Рассуждение | Время | Вызовов | Повторов | Из кеша | Токены вход / выход / рассуждение | Результат | Отброшено (цитата не найдена) |
+| :--- | :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+{% for s in r.stages %}
+| {{ s.name }} | {{ {"ok": "выполнен", "skipped": "**пропущен**"}.get(s.status, "**сбой**: " ~ (s.error|cell)) }} | {{ (s.models|join(", ")) or "—" }} | {{ s.thinking or "—" }}{% if s.thinking_zero %} (не рассуждала в {{ s.thinking_zero }} вызовах){% endif %} | {{ s.seconds|duration }} | {{ s.calls }} | {{ s.retries }} | {{ s.cache_hits }} | {{ s.tokens_in }} / {{ s.tokens_out }} / {{ s.tokens_thinking }} | {{ s["items"] }} | {{ s.dropped|length }} |
+{% endfor %}
+{% if switches %}
+
+Переходы на запасную модель:
+{% for w in switches %}
+- {{ w.stage }}: {{ w["from"] }} → {{ w.to }} ({{ w.reason|inline }})
+{% endfor %}
+{% endif %}
+{% if dropped_total %}
+
+<details><summary>Отброшенные цитаты ({{ dropped_total }})</summary>
+
+{% for s in r.stages %}{% for d in s.dropped %}
+- {{ s.name }}: {{ d.reason }} — «{{ d.quote|inline }}»
+{% endfor %}{% endfor %}
+
+</details>
+{% endif %}
+
+## Главное
+
+{% if top5 %}
+До пяти подтверждённых дефектов уровня «критично» и «высокая»; полный список — в разделах 3 и 4.
+
+{% for f in top5 %}
+### {{ loop.index }}. {{ f.kind|kind|capitalize }}: {{ f.description|inline|truncate(140) }}
+
+{{ finding(f) }}
+{% endfor %}
+{% elif analysis_ran %}
+Подтверждённых дефектов высокой и критичной важности не найдено.
+{% else %}
+Проходы проверки не выполнялись в этом прогоне: дефекты не оценивались.
+{% endif %}
+
+## 2. Нарезка требований
+
+Всего требований: {{ r.requirements|length }}.
+
+| ID в отчёте | ID в документе | Место | Краткая формулировка | Цитата |
+| :--- | :--- | :--- | :--- | :--- |
+{% for q in r.requirements %}
+| {{ q.rid }} | {{ q.source_id|cell }} | {{ q.quote.location|cell }} | {{ q.summary|cell }} | «{{ q.quote.text|cell }}» |
+{% endfor %}
+
+## 3. Проверка каждого требования
+
+{% if not analysis_ran %}
+Проходы проверки отдельных требований не выполнялись в этом прогоне.
+{% else %}
+{% for q in r.requirements if by_req[q.rid] %}
+### {{ q.rid }}{% if q.source_id %} ({{ q.source_id }}){% endif %} — {{ q.summary|inline }}
+
+> {{ q.quote.text|inline }}
+>
+> — {{ q.quote.location|inline }}
+
+{% for f in by_req[q.rid] %}
+{{ finding(f, false) }}
+{% endfor %}
+{% endfor %}
+{% for f in req_orphans %}
+{{ finding(f) }}
+{% endfor %}
+{% if clean_rids %}
+Замечаний нет: {{ clean_rids|join(", ") }}.
+{% endif %}
+{% endif %}
+
+## 4. Проверка набора целиком
+
+{% if not analysis_ran %}
+Проходы проверки набора не выполнялись в этом прогоне.
+{% elif set_findings %}
+{% for f in set_findings %}
+{{ finding(f) }}
+{% endfor %}
+{% else %}
+Замечаний к набору нет.
+{% endif %}
+
+{% if potential %}
+## Требует уточнения
+
+Замечания, которые проверка оспорила или не смогла подтвердить с обеих сторон. В сводку нарушений и в вердикт
+они не входят: их нужно уточнить у владельца требований.
+
+{% for f in potential %}
+{{ finding(f) }}
+{% endfor %}
+{% endif %}
+## 5. Сводка
+
+| Показатель | Значение |
+| :--- | ---: |
+| Требований | {{ r.requirements|length }} |
+| Требований с замечаниями | {{ reqs_with_findings }} |
+| Нарушений | {{ n_confirmed }} |
+{% for k, label in SEVERITY_RU.items() %}
+| — {{ label }} | {{ sev_counts[k] }} |
+{% endfor %}
+{% for k, label in KIND_RU.items() if kind_counts[k] %}
+| — {{ label }} | {{ kind_counts[k] }} |
+{% endfor %}
+
+{% if potential %}
+Ещё {{ potential|length }} замечаний требуют уточнения и в сводку не входят (см. раздел «Требует уточнения»).
+
+{% endif %}
+**Ключевые дефекты по типам: противоречий {{ kind_counts['contradiction'] }} · непроверяемых {{ kind_counts['unverifiable'] }} · неполных {{ kind_counts['incomplete'] }}**
+{% if critical_list %}
+
+{% for f in critical_list %}
+- **{{ f.fid }}** ({{ f.severity|sev }}, {{ f.kind|kind }}) — {{ f.quotes[0].location|inline }}: {{ f.description|inline }}
+{% endfor %}
+{% elif analysis_ran %}
+не найдено.
+{% else %}
+не оценивались в этом прогоне.
+{% endif %}
+
+## 6. Итог
+
+**{{ verdict_text }}**
+{% if r.incomplete_reason %}
+
+Прогон неполный: {{ r.incomplete_reason|inline }}. Найденные дефекты ниже реальны, но список не полон.
+Запустите ту же команду ещё раз после устранения причины: выполненные вызовы возьмутся из кеша.
+{% elif not analysis_ran %}
+
+Вердикт предварительный: в этом прогоне выполнена только нарезка, свойства требований не проверялись.
+{% endif %}
+{% if r.first_fixes %}
+
+Исправить в первую очередь:
+
+{% for x in r.first_fixes %}
+{{ loop.index }}. {{ x|inline }}
+{% endfor %}
+{% endif %}
